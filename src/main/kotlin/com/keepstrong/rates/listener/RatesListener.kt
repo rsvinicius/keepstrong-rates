@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component
 class RatesListener {
     @RabbitListener(queues = ["payment.rates-details"])
     fun receiveMessage(paymentDto: PaymentDto) {
-
         println("It's necessary to create an evaluation record for the order:\n" +
                 "Payment Id: ${paymentDto.id}\n" +
                 "Client Name: ${paymentDto.name}\n" +

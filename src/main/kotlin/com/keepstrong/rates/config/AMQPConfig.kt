@@ -4,6 +4,7 @@ import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
+import org.springframework.amqp.core.QueueBuilder
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -17,7 +18,15 @@ import org.springframework.context.annotation.Configuration
 class AMQPConfig {
     @Bean
     fun ratesDetailsQueue(): Queue {
-        return Queue("payment.rates-details", false)
+        return QueueBuilder
+                .nonDurable("payment.rates-details")
+                .deadLetterExchange("payment.dlx")
+                .build()
+    }
+
+    @Bean
+    fun deadLetterRatesDetailsQueue(): Queue {
+        return Queue("payment.rates-details-dlq", false)
     }
 
     @Bean
@@ -26,9 +35,20 @@ class AMQPConfig {
     }
 
     @Bean
-    fun paymentRatesBinding(fanoutExchange: FanoutExchange): Binding {
+    fun deadLetterExchange(): FanoutExchange {
+        return FanoutExchange("payment.dlx")
+    }
+
+    @Bean
+    fun paymentRatesBinding(): Binding {
         return BindingBuilder.bind(ratesDetailsQueue())
-                .to(fanoutExchange)
+                .to(fanoutExchange())
+    }
+
+    @Bean
+    fun paymentRatesDlxBinding(): Binding {
+        return BindingBuilder.bind(deadLetterRatesDetailsQueue())
+                .to(deadLetterExchange())
     }
 
     @Bean
